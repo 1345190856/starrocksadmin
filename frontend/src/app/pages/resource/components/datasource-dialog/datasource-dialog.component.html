@@ -1,0 +1,124 @@
+<nb-card class="dialog-card">
+    <nb-card-header>{{ isEdit ? 'Edit Data Source' : 'Add Data Source' }}</nb-card-header>
+    <nb-card-body>
+        <form #form="ngForm">
+            <div class="form-group">
+                <label class="label">Name</label>
+                <input nbInput fullWidth [(ngModel)]="model.name" name="name" required>
+            </div>
+
+            <div class="form-group">
+                <label class="label">Type</label>
+                <nb-select fullWidth [(ngModel)]="model.type" name="type" required>
+                    <nb-option value="prometheus">Prometheus</nb-option>
+                    <nb-option value="mysql">MySQL</nb-option>
+                    <nb-option value="starrocks">StarRocks</nb-option>
+                </nb-select>
+            </div>
+
+            <div class="form-group">
+                <label class="label">Region / Country</label>
+                <nb-select fullWidth [(ngModel)]="model.region" name="region" placeholder="China">
+                    <nb-option value="Common">Common (通用)</nb-option>
+                    <nb-option value="China">China</nb-option>
+                    <nb-option value="Pakistan">Pakistan</nb-option>
+                    <nb-option value="Thailand">Thailand</nb-option>
+                    <nb-option value="Philippines">Philippines</nb-option>
+                    <nb-option value="Mexico">Mexico</nb-option>
+                    <nb-option value="Indonesia">Indonesia</nb-option>
+                </nb-select>
+            </div>
+
+            <div class="form-group">
+                <label class="label">URL / Host</label>
+                <input nbInput fullWidth [(ngModel)]="model.url" name="url" required
+                    placeholder="http://localhost:9090">
+                <p class="caption-2 mt-1">For Prometheus: Full URL (inc http). For MySQL: host:port (not implemented yet
+                    for visualization).</p>
+            </div>
+
+            <div class="form-group row">
+                <div class="col-6">
+                    <label class="label">Username (Optional)</label>
+                    <input nbInput fullWidth [(ngModel)]="model.username" name="username">
+                </div>
+                <div class="col-6">
+                    <label class="label">Password (Optional)</label>
+                    <input nbInput fullWidth type="password" [(ngModel)]="model.password" name="password">
+                </div>
+            </div>
+
+            <div class="form-group row" *ngIf="model.type === 'starrocks' || model.type === 'mysql'">
+                <div class="col-6">
+                    <label class="label">Connection Timeout (Seconds)</label>
+                    <input nbInput fullWidth type="number" [(ngModel)]="model.connection_timeout"
+                        name="connection_timeout" placeholder="10">
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <hr class="section-divider my-4" *ngIf="model.type === 'starrocks'">
+
+            <!-- FE IP Mapping Section as a separate block -->
+            <div class="fe-mapping-block" *ngIf="model.type === 'starrocks'">
+                <div class="block-header d-flex justify-content-between align-items-center mb-3">
+                    <div class="title-group">
+                        <h6 class="mb-0">FE 节点网络映射</h6>
+                        <span class="caption-2 text-hint">当后端无法直连 FE 内部 IP 时，在此配置 IP 映射关系</span>
+                    </div>
+                    <button nbButton size="small" status="success" (click)="addMapping()" type="button" ghost>
+                        <nb-icon icon="plus-outline"></nb-icon> 添加映射
+                    </button>
+                </div>
+
+                <div class="mapping-container p-3 rounded">
+                    <div class="mapping-list" *ngIf="mappingEntries.length > 0">
+                        <div class="mapping-item row no-gutters mb-3 align-items-center"
+                            *ngFor="let item of mappingEntries; let i = index">
+                            <div class="col-5">
+                                <label class="label-sm">内部 IP:端口</label>
+                                <input nbInput fullWidth size="small" [(ngModel)]="item.key" [name]="'mapKey' + i"
+                                    placeholder="192.168.2.201:9030">
+                            </div>
+                            <div class="col-1 text-center mt-3">
+                                <nb-icon icon="arrow-forward-outline" status="primary"></nb-icon>
+                            </div>
+                            <div class="col-5">
+                                <label class="label-sm">映射 IP:端口</label>
+                                <input nbInput fullWidth size="small" [(ngModel)]="item.value" [name]="'mapVal' + i"
+                                    placeholder="10.1.1.1:19120">
+                            </div>
+                            <div class="col-1 text-right mt-3">
+                                <button nbButton ghost size="tiny" status="danger" (click)="removeMapping(i)"
+                                    type="button">
+                                    <nb-icon icon="trash-2-outline"></nb-icon>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="empty-mapping text-center py-4" *ngIf="mappingEntries.length === 0">
+                        <nb-icon icon="layers-outline" class="mb-2" style="font-size: 2rem; opacity: 0.3;"></nb-icon>
+                        <p class="caption mb-0">暂无网络映射关系</p>
+                    </div>
+
+                    <div class="mapping-tips mt-2" *ngIf="mappingEntries.length > 0">
+                        <nb-icon icon="info-outline" status="info" style="font-size: 0.8rem;"></nb-icon>
+                        <span class="caption ml-1">映射生效后，告警系统将通过映射后的地址连接各 FE 节点。</span>
+                    </div>
+                </div>
+            </div>
+
+        </form>
+    </nb-card-body>
+    <nb-card-footer>
+        <div class="d-flex justify-content-between">
+            <button nbButton status="info" type="button" (click)="test()" [disabled]="testing"
+                [nbSpinner]="testing">测试连接</button>
+            <div>
+                <button nbButton status="basic" (click)="cancel()" class="mr-2">取消</button>
+                <button nbButton status="primary" (click)="submit()">保存</button>
+            </div>
+        </div>
+    </nb-card-footer>
+</nb-card>

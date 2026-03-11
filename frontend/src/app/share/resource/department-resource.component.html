@@ -1,0 +1,114 @@
+<nb-layout>
+    <nb-layout-column>
+        <nb-card class="border-0 shadow-sm">
+            <nb-card-header>
+                <div class="row align-items-center">
+                    <div class="col-md-3">
+                        <h5>部门资源看板 (Department Resources)</h5>
+                    </div>
+                    <div class="col-md-9">
+                        <div class="custom-filters">
+                            <nb-select [(selected)]="selectedCountry" (selectedChange)="refreshData()" status="warning"
+                                placeholder="选择国家" class="mr-2" style="width: 150px;">
+                                <nb-option value="All">所有国家</nb-option>
+                                <nb-option *ngFor="let c of countries" [value]="c">{{ c }}</nb-option>
+                            </nb-select>
+
+                            <nb-select [(selected)]="selectedDept" (selectedChange)="onFilterChange()" status="primary"
+                                placeholder="选择部门" class="mr-2" style="min-width: 150px;">
+                                <nb-option value="all">所有部门</nb-option>
+                                <nb-option *ngFor="let d of departments" [value]="d">{{ d }}</nb-option>
+                            </nb-select>
+
+                            <nb-select [(selected)]="timeRange" (selectedChange)="onFilterChange()" status="info"
+                                class="mr-2" style="width: 150px;">
+                                <nb-option value="1h">1小时</nb-option>
+                                <nb-option value="6h">6小时</nb-option>
+                                <nb-option value="12h">12小时</nb-option>
+                                <nb-option value="24h">24小时</nb-option>
+                                <nb-option value="3d">3天</nb-option>
+                                <nb-option value="7d">7天</nb-option>
+                                <nb-option value="custom">自定义</nb-option>
+                            </nb-select>
+
+                            <div *ngIf="timeRange === 'custom'" class="d-flex align-items-center mr-2">
+                                <input nbInput placeholder="Start" [nbDatepicker]="startDate"
+                                    [(ngModel)]="startTimeInput" (ngModelChange)="onDateInputChange()" fieldSize="small"
+                                    style="width: 140px;">
+                                <nb-datepicker #startDate format="yyyy-MM-ddTHH:mm:ss"></nb-datepicker>
+                                <span class="mx-1">-</span>
+                                <input nbInput placeholder="End" [nbDatepicker]="endDate" [(ngModel)]="endTimeInput"
+                                    (ngModelChange)="onDateInputChange()" fieldSize="small" style="width: 140px;">
+                                <nb-datepicker #endDate format="yyyy-MM-ddTHH:mm:ss"></nb-datepicker>
+                            </div>
+
+                            <button nbButton status="success" (click)="refreshData()" class="mr-2">
+                                <nb-icon icon="refresh"></nb-icon>
+                            </button>
+
+                            <button nbButton status="info" (click)="exportPDF()" [disabled]="exporting"
+                                nbTooltip="Export PDF">
+                                <nb-icon icon="download-outline"></nb-icon>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </nb-card-header>
+            <nb-card-body id="dashboard-content">
+                <div *ngIf="summary" class="summary-export-view mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2 no-export">
+                        <strong>智能分析结果:</strong>
+                        <button nbButton ghost size="tiny" status="danger" (click)="summary = ''">
+                            <nb-icon icon="close-outline"></nb-icon>
+                        </button>
+                    </div>
+                    <div class="export-only mb-2"><strong>智能分析结果:</strong></div>
+                    <div style="white-space: pre-line;">{{ summary }}</div>
+                </div>
+
+                <nb-accordion>
+                    <nb-accordion-item expanded="true">
+                        <nb-accordion-item-header>
+                            部门资源趋势
+                            <div class="ml-auto">
+                                <button nbButton ghost size="tiny" status="info" (click)="analyze($event)">
+                                    <nb-icon icon="bulb-outline"></nb-icon> 智能分析
+                                </button>
+                            </div>
+                        </nb-accordion-item-header>
+                        <nb-accordion-item-body>
+                            <!-- Loop through groups (countries) -->
+                            <div *ngFor="let group of displayedGroups; let i = index"
+                                class="country-group-container mb-4">
+                                <div *ngIf="selectedCountry === 'All' || selectedCountry === '所有国家'"
+                                    class="d-flex align-items-center mb-3">
+                                    <h6 class="text-hint m-0 text-uppercase font-weight-bold" style="min-width: 80px;">
+                                        {{ group.country }}</h6>
+                                    <div class="flex-grow-1 ml-3" style="border-bottom: 2px dashed #edf1f7;"></div>
+                                </div>
+
+                                <div class="panel-container row">
+                                    <div *ngFor="let panel of group.panels"
+                                        class="col-md-{{ panel.config?.width || 6 }} mb-3" #panelCol>
+                                        <ngx-chart-panel [panel]="panel" [start]="customStart" [end]="customEnd"
+                                            [dept]="selectedDept" [colorIndex]="selectedDept !== 'all' ? i : 0"
+                                            [country]="group.country" [isShared]="true"
+                                            (visibilityChange)="panelCol.style.display = $event ? '' : 'none'"></ngx-chart-panel>
+                                    </div>
+                                    <div *ngIf="group.panels.length === 0" class="col-12 text-center py-3 text-hint">
+                                        {{ group.country }}: 暂无部门资源图表
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div *ngIf="displayedGroups.length === 0" class="text-center py-5 text-hint">
+                                暂无数据，请检查筛选条件
+                            </div>
+
+                        </nb-accordion-item-body>
+                    </nb-accordion-item>
+                </nb-accordion>
+            </nb-card-body>
+        </nb-card>
+    </nb-layout-column>
+</nb-layout>

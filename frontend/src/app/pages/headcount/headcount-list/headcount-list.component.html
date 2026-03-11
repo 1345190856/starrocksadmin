@@ -1,0 +1,87 @@
+<nb-card>
+    <nb-card-header>
+        <div class="header-container">
+            <h3>人力资源</h3>
+            <div class="actions">
+                <input nbInput placeholder="Search user ID, name, email..." [(ngModel)]="query"
+                    (keyup.enter)="onSearch()" />
+                <button nbButton status="primary" (click)="onSearch()">查询</button>
+                <button nbButton status="success" (click)="onSync()" [nbSpinner]="isSyncing" nbSpinnerStatus="control"
+                    nbTooltip="同步最新人员信息，请稍后" nbTooltipPlacement="top">
+                    <nb-icon icon="sync-outline"></nb-icon> 同步
+                </button>
+            </div>
+        </div>
+    </nb-card-header>
+    <nb-card-body>
+        <div class="columns-selector">
+            <span class="label">显示列:</span>
+            <div class="checkbox-group">
+                <nb-checkbox *ngFor="let col of allColumns" [checked]="selectedColumns.has(col.key)"
+                    (checkedChange)="toggleColumn(col.key, $event)">
+                    {{ col.label }}
+                </nb-checkbox>
+            </div>
+        </div>
+
+        <div class="table-responsive" [nbSpinner]="isLoading">
+            <table class="table table-bordered table-striped table-hover">
+                <thead>
+                    <tr>
+                        <ng-container *ngFor="let col of allColumns">
+                            <th *ngIf="selectedColumns.has(col.key)" [class.sortable]="col.sortable"
+                                (click)="col.sortable && onSort(col.key)">
+                                {{ col.label }}
+                                <nb-icon *ngIf="col.sortable"
+                                    [icon]="sortBy === col.key ? (sortOrder === 'asc' ? 'arrow-upward-outline' : 'arrow-downward-outline') : 'expand-outline'"
+                                    [class.active]="sortBy === col.key">
+                                </nb-icon>
+                            </th>
+                        </ng-container>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let emp of employees">
+                        <ng-container *ngFor="let col of allColumns">
+                            <td *ngIf="selectedColumns.has(col.key)">{{ emp[col.key] }}</td>
+                        </ng-container>
+                    </tr>
+                    <tr *ngIf="employees.length === 0 && !isLoading">
+                        <td [attr.colspan]="selectedColumns.size" class="text-center">暂无数据</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </nb-card-body>
+    <nb-card-footer>
+        <div class="pagination-controls">
+            <div class="page-size-selector">
+                每页显示:
+                <nb-select [(selected)]="pageSize" (selectedChange)="onPageSizeChange($event)" size="small"
+                    class="page-select">
+                    <nb-option *ngFor="let size of pageSizes" [value]="size">{{ size }}</nb-option>
+                </nb-select>
+                条
+            </div>
+
+            <div class="pagination-buttons">
+                <span class="page-info">共 {{ total }} 条</span>
+                <button nbButton size="small" ghost (click)="onPageChange(page - 1)" [disabled]="page <= 1">
+                    <nb-icon icon="arrow-ios-back-outline"></nb-icon>
+                </button>
+
+                <ng-container *ngFor="let p of pages">
+                    <button nbButton size="small" [appearance]="p === page ? 'filled' : 'ghost'"
+                        [status]="p === page ? 'primary' : 'basic'" (click)="goToPage(p)" [disabled]="p === '...'">
+                        {{ p }}
+                    </button>
+                </ng-container>
+
+                <button nbButton size="small" ghost (click)="onPageChange(page + 1)"
+                    [disabled]="page * pageSize >= total">
+                    <nb-icon icon="arrow-ios-forward-outline"></nb-icon>
+                </button>
+            </div>
+        </div>
+    </nb-card-footer>
+</nb-card>

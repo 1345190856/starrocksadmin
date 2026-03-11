@@ -1,0 +1,47 @@
+.tag-input-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    .tag-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .custom-tag {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 10px;
+        background-color: #f0f7ff;
+        color: #3366ff;
+        border: 1px solid #adc6ff;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 500;
+
+        nb-icon {
+            margin-left: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+
+            &:hover {
+                color: #ff3d71;
+            }
+        }
+    }
+}
+
+.ml-2 {
+    margin-left: 0.5rem;
+}
+
+.col-md-6 {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.row {
+    margin-left: -10px;
+    margin-right: -10px;
+}

@@ -1,0 +1,50 @@
+.dialog-card {
+    width: 700px;
+    max-width: 95vw;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+
+    nb-card-body {
+        overflow-y: auto;
+        flex: 1;
+    }
+}
+
+.section-divider {
+    border: none;
+    border-top: 1px dashed var(--divider-color, #edf1f7);
+}
+
+.fe-mapping-block {
+    .block-header {
+        .title-group {
+            h6 {
+                font-weight: 600;
+                font-size: 0.9rem;
+            }
+        }
+    }
+
+    .mapping-container {
+        background: rgba(var(--color-basic-focus-rgb, 143, 155, 179), 0.05);
+        border: 1px solid var(--divider-color, #edf1f7);
+        max-height: 300px; // Limit mapping list height
+        overflow-y: auto;
+
+        .label-sm {
+            font-size: 0.75rem;
+            color: var(--text-hint-color, #8f9bb3);
+            display: block;
+            margin-bottom: 0.25rem;
+            font-weight: 600;
+        }
+
+        .mapping-item {
+            &:hover {
+                background: rgba(255, 255, 255, 0.5);
+                border-radius: 4px;
+            }
+        }
+    }
+}

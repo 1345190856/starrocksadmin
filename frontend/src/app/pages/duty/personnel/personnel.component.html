@@ -1,0 +1,23 @@
+<ngx-duty-barrage></ngx-duty-barrage>
+<nb-card class="mt-2">
+    <nb-card-header>
+        <div class="header-container">
+            <h3>值班卡</h3>
+            <div class="actions">
+                <button nbButton status="primary" (click)="notifyDuty()" class="mr-3">
+                    <nb-icon icon="bell-outline"></nb-icon> 通知值班
+                </button>
+                <button nbButton status="primary" (click)="onOpenWheel()" title="排班转盘" class="mr-3">
+                    <nb-icon icon="shuffle-2-outline"></nb-icon> 值班卡
+                </button>
+                <button nbButton status="primary" (click)="onCreate()">添加人员</button>
+            </div>
+        </div>
+    </nb-card-header>
+
+    <nb-card-body>
+        <ng2-smart-table [settings]="settings" [source]="source" (create)="onCreate()" (edit)="onEdit($event)"
+            (delete)="onDelete($event)">
+        </ng2-smart-table>
+    </nb-card-body>
+</nb-card>

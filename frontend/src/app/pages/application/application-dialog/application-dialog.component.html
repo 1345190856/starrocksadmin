@@ -1,0 +1,40 @@
+<nb-card [nbSpinner]="loading" style="min-width: 400px; max-width: 500px;">
+    <nb-card-header>{{ isEdit ? '编辑应用' : '新增应用' }} ({{ application.region }})</nb-card-header>
+    <nb-card-body>
+        <div class="form-group row mb-3">
+            <label class="label col-sm-3 col-form-label">应用名称</label>
+            <div class="col-sm-9">
+                <input type="text" nbInput fullWidth [(ngModel)]="application.name" placeholder="请输入应用名称">
+            </div>
+        </div>
+        <div class="form-group row mb-3">
+            <label class="label col-sm-3 col-form-label">应用类型</label>
+            <div class="col-sm-9">
+                <nb-select fullWidth [(ngModel)]="application.type" [disabled]="application.region === '常用工具'">
+                    <nb-option *ngFor="let t of types" [value]="t">{{ t | uppercase }}</nb-option>
+                </nb-select>
+                <small class="text-hint" *ngIf="application.region === '常用工具'">常用工具固定使用 APPLICATION 类型</small>
+            </div>
+        </div>
+        <div class="form-group row mb-3">
+            <label class="label col-sm-3 col-form-label">地址</label>
+            <div class="col-sm-9">
+                <input type="text" nbInput fullWidth [(ngModel)]="application.address" placeholder="请输入应用地址 (URL)">
+            </div>
+        </div>
+        <div class="form-group row">
+            <label class="label col-sm-3 col-form-label">所属板块</label>
+            <div class="col-sm-9">
+                <nb-select fullWidth [selected]="application.region" (selectedChange)="onRegionChange($event)">
+                    <nb-option *ngFor="let r of regions" [value]="r">{{ r }}</nb-option>
+                </nb-select>
+            </div>
+        </div>
+    </nb-card-body>
+    <nb-card-footer>
+        <div class="d-flex justify-content-end gap-2">
+            <button nbButton status="basic" (click)="cancel()">取消</button>
+            <button nbButton status="primary" (click)="submit()">确定</button>
+        </div>
+    </nb-card-footer>
+</nb-card>

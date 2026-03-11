@@ -1,0 +1,101 @@
+<nb-card *ngIf="isVisible" [nbSpinner]="loading" nbSpinnerStatus="primary" class="chart-panel-card"
+    [class.shared]="isShared">
+    <nb-card-header>
+        <span class="title">{{ panel.title }}</span>
+        <div class="actions">
+            <button nbButton ghost size="tiny" status="primary" (click)="toggleWidth.emit()">
+                <nb-icon [icon]="panel.config?.width === 12 ? 'collapse-outline' : 'expand-outline'"></nb-icon>
+            </button>
+            <button nbButton ghost size="tiny" status="info" (click)="edit.emit()">
+                <nb-icon icon="edit-outline"></nb-icon>
+            </button>
+            <button nbButton ghost size="tiny" status="danger" (click)="delete.emit()">
+                <nb-icon icon="trash-2-outline"></nb-icon>
+            </button>
+        </div>
+    </nb-card-header>
+    <nb-card-body>
+        <div *ngIf="error" class="alert alert-danger p-2 text-small">
+            {{ error }}
+        </div>
+
+        <div *ngIf="!error && panel.chart_type === 'stat'" class="stat-container">
+            <div class="stat-value">{{ statValue }}</div>
+            <div class="stat-label">{{ statLabel }}</div>
+        </div>
+
+        <div *ngIf="!error && panel.chart_type === 'table'" class="table-container">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th *ngFor="let col of tableCols">{{ col }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let row of tableRows">
+                        <td *ngFor="let col of tableCols" [class.highlighted-cell]="shouldHighlight(row, col)">
+                            <div class="cell-with-view" *ngIf="shouldShowViewIcon(col, row[col]); else normalCell">
+                                <nb-icon icon="eye-outline" class="view-icon" (click)="showDetail(col, row[col])"
+                                    nbTooltip="View Full Text"></nb-icon>
+                                <span class="cell-content">{{ row[col] }}</span>
+                            </div>
+                            <ng-template #normalCell>
+                                <span class="cell-content-normal">{{ row[col] }}</span>
+                            </ng-template>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div *ngIf="!error && panel.chart_type !== 'stat' && panel.chart_type !== 'table' && options"
+            class="chart-wrapper" style="display: flex; flex-direction: column; height: 100%;">
+            <div echarts [options]="options" [autoResize]="true" (chartInit)="onChartInit($event)"
+                class="chart-container" style="flex: 1; min-height: 0;"></div>
+            <div class="legend-container" *ngIf="legendItems.length > 0">
+                <div class="legend-item" *ngFor="let item of legendItems" (click)="toggleLegend(item)"
+                    [class.disabled]="!item.checked">
+                    <span class="legend-icon" [style.background-color]="item.checked ? item.color : '#ccc'"></span>
+                    <span class="legend-text mr-2">{{ item.name }}</span>
+
+                    <span class="legend-stat text-hint ml-2"
+                        *ngIf="panel.chart_type !== 'bar' && panel.config?.showMax && item.max">Max: {{ item.max
+                        }}</span>
+                    <span class="legend-stat text-hint ml-2"
+                        *ngIf="panel.chart_type !== 'bar' && panel.config?.showMin && item.min">Min: {{ item.min
+                        }}</span>
+                    <span class="legend-stat text-hint ml-2"
+                        *ngIf="panel.chart_type !== 'bar' && panel.config?.showMean && item.mean">Avg: {{
+                        item.mean }}</span>
+                    <span class="legend-stat text-hint ml-2"
+                        *ngIf="panel.chart_type !== 'bar' && panel.config?.showLast && item.last">Last: {{
+                        item.last }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div *ngIf="!loading && !options && !statValue && tableRows.length === 0 && !error" class="no-data">
+            No Data
+        </div>
+    </nb-card-body>
+</nb-card>
+
+<ng-template #detailModal let-data let-ref="dialogRef">
+    <nb-card style="width: 800px; max-height: 80vh;">
+        <nb-card-header class="d-flex justify-content-between align-items-center">
+            <span>{{ data.title }} 详情</span>
+            <button nbButton ghost size="tiny" (click)="ref.close()">
+                <nb-icon icon="close-outline"></nb-icon>
+            </button>
+        </nb-card-header>
+        <nb-card-body>
+            <div class="p-3 bg-light rounded"
+                style="overflow: auto; white-space: pre-wrap; font-family: monospace; font-size: 0.9rem; line-height: 1.5; color: #333;">
+                {{ data.content }}
+            </div>
+        </nb-card-body>
+        <nb-card-footer class="text-right">
+            <button nbButton status="primary" (click)="ref.close()">关闭</button>
+        </nb-card-footer>
+    </nb-card>
+</ng-template>

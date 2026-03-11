@@ -1,0 +1,205 @@
+<div class="mb-3 mt-4">
+    <div class="d-flex align-items-center justify-content-between mb-2">
+        <div class="d-flex align-items-center flex-shrink-0 mr-3">
+            <nb-icon icon="activity-outline" class="mr-2" style="font-size: 1.5rem;"></nb-icon>
+            <h4 class="m-0 text-nowrap">资源视图</h4>
+        </div>
+        <div class="d-flex align-items-center flex-wrap justify-content-end">
+
+            <nb-select placeholder="Country/Region" [(selected)]="selectedCountry" (selectedChange)="onCountryChange()"
+                status="warning" class="mr-2" style="width: 140px;">
+                <nb-option value="All">所有国家</nb-option>
+                <nb-option *ngFor="let c of countries" [value]="c">{{ c }}</nb-option>
+            </nb-select>
+
+            <nb-select placeholder="部门筛选" [(selected)]="selectedDept" (selectedChange)="refreshData()" status="primary"
+                class="mr-2" style="width: 150px;">
+                <nb-option value="all">所有部门</nb-option>
+                <nb-option *ngFor="let d of departments" [value]="d">{{ d }}</nb-option>
+            </nb-select>
+
+            <input type="datetime-local" nbInput [(ngModel)]="startTimeInput" (change)="onDateInputChange()" step="1"
+                class="mr-2" style="max-width: 220px;">
+            <span class="mr-2 text-hint">-</span>
+            <input type="datetime-local" nbInput [(ngModel)]="endTimeInput" (change)="onDateInputChange()" step="1"
+                class="mr-2" style="max-width: 220px;">
+
+            <nb-select placeholder="时间范围" [(selected)]="timeRange" (selectedChange)="onFilterChange()" status="info"
+                class="mr-2" style="width: 140px;">
+                <nb-option value="1h">最近 1 小时</nb-option>
+                <nb-option value="6h">最近 6 小时</nb-option>
+                <nb-option value="12h">最近 12 小时</nb-option>
+                <nb-option value="24h">最近 24 小时</nb-option>
+                <nb-option value="3d">最近 3 天</nb-option>
+                <nb-option value="7d">最近 7 天</nb-option>
+                <nb-option value="custom">自定义</nb-option>
+            </nb-select>
+
+            <button nbButton status="primary" (click)="refreshData()" class="mr-2">查询</button>
+
+            <button nbButton status="success" (click)="exportPDF()" [disabled]="exporting" nbTooltip="Export PDF">
+                <nb-icon icon="download-outline"></nb-icon>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="dashboard-content">
+    <nb-accordion multi>
+        <!-- Department Usage -->
+        <nb-accordion-item expanded [class.d-none]="sectionSelection.department === false && exporting">
+            <nb-accordion-item-header>
+                <div class="d-flex align-items-center w-100">
+                    <nb-checkbox [(ngModel)]="sectionSelection.department" (click)="$event.stopPropagation()"
+                        class="mr-2 no-export"></nb-checkbox>
+                    <span>部门资源</span>
+                    <button nbButton ghost size="tiny" status="info" class="ml-auto no-export"
+                        (click)="analyze($event, 'department')">
+                        <nb-icon icon="bulb-outline"></nb-icon> 智能分析
+                    </button>
+                    <button nbButton ghost size="tiny" status="primary" class="ml-2 no-export"
+                        (click)="addPanel($event, 'department')">
+                        <nb-icon icon="plus-outline"></nb-icon> 添加图表
+                    </button>
+                </div>
+            </nb-accordion-item-header>
+            <nb-accordion-item-body>
+                <div class="summary-container mb-3">
+                    <textarea nbInput fullWidth placeholder="输入部门资源使用总结..." [(ngModel)]="summaries.department"
+                        (ngModelChange)="saveSummaries()" rows="3" class="no-export"></textarea>
+                    <div class="summary-export-view export-only">{{ summaries.department }}</div>
+                </div>
+
+                <div *ngFor="let group of deptGroups; let i = index; trackBy: trackByGroup"
+                    class="country-group-container mb-4">
+                    <div *ngIf="deptGroups.length > 1" class="d-flex align-items-center mb-3">
+                        <h6 class="text-hint m-0 text-uppercase font-weight-bold" style="min-width: 80px;">{{
+                            group.country }}</h6>
+                        <div class="flex-grow-1 ml-3" style="border-bottom: 2px dashed #edf1f7;"></div>
+                    </div>
+
+                    <div class="row panel-container" cdkDropList cdkDropListOrientation="mixed"
+                        [cdkDropListData]="group.panels" (cdkDropListDropped)="drop($event, group.panels)">
+                        <div cdkDrag class="mb-4" *ngFor="let p of group.panels; trackBy: trackByPanel"
+                            [ngClass]="{'col-lg-12': p.config?.width === 12, 'col-lg-6': !p.config?.width || p.config.width !== 12}">
+                            <ngx-chart-panel [panel]="p" [start]="customStart" [end]="customEnd" [dept]="selectedDept"
+                                [colorIndex]="selectedDept !== 'all' ? i : 0" [country]="group.country"
+                                (edit)="editPanel(p)" (delete)="deletePanel(p)"
+                                (toggleWidth)="togglePanelWidth(p)"></ngx-chart-panel>
+                        </div>
+                        <div class="col-12 text-center text-muted" *ngIf="group.panels.length === 0">
+                            暂无图表，点击右上角添加
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 text-center text-muted" *ngIf="deptGroups.length === 0">
+                    暂无数据
+                </div>
+            </nb-accordion-item-body>
+        </nb-accordion-item>
+
+        <!-- Application Usage -->
+        <nb-accordion-item expanded [class.d-none]="sectionSelection.application === false && exporting">
+            <nb-accordion-item-header>
+                <div class="d-flex align-items-center w-100">
+                    <nb-checkbox [(ngModel)]="sectionSelection.application" (click)="$event.stopPropagation()"
+                        class="mr-2 no-export"></nb-checkbox>
+                    <span>应用资源</span>
+                    <button nbButton ghost size="tiny" status="info" class="ml-auto no-export"
+                        (click)="analyze($event, 'application')">
+                        <nb-icon icon="bulb-outline"></nb-icon> 智能分析
+                    </button>
+                    <button nbButton ghost size="tiny" status="primary" class="ml-2 no-export"
+                        (click)="addPanel($event, 'application')">
+                        <nb-icon icon="plus-outline"></nb-icon> 添加图表
+                    </button>
+                </div>
+            </nb-accordion-item-header>
+            <nb-accordion-item-body>
+                <div class="summary-container mb-3">
+                    <textarea nbInput fullWidth placeholder="输入应用资源使用总结..." [(ngModel)]="summaries.application"
+                        (ngModelChange)="saveSummaries()" rows="3" class="no-export"></textarea>
+                    <div class="summary-export-view export-only">{{ summaries.application }}</div>
+                </div>
+
+                <div *ngFor="let group of appGroups; let i = index; trackBy: trackByGroup"
+                    class="country-group-container mb-4">
+                    <div *ngIf="appGroups.length > 1" class="d-flex align-items-center mb-3">
+                        <h6 class="text-hint m-0 text-uppercase font-weight-bold" style="min-width: 80px;">{{
+                            group.country }}</h6>
+                        <div class="flex-grow-1 ml-3" style="border-bottom: 2px dashed #edf1f7;"></div>
+                    </div>
+
+                    <div class="row panel-container" cdkDropList cdkDropListOrientation="mixed"
+                        [cdkDropListData]="group.panels" (cdkDropListDropped)="drop($event, group.panels)">
+                        <div cdkDrag class="mb-4" *ngFor="let p of group.panels; trackBy: trackByPanel"
+                            [ngClass]="{'col-lg-12': p.config?.width === 12, 'col-lg-6': !p.config?.width || p.config.width !== 12}">
+                            <ngx-chart-panel [panel]="p" [start]="customStart" [end]="customEnd" [dept]="selectedDept"
+                                [colorIndex]="selectedDept !== 'all' ? i : 0" [country]="group.country"
+                                (edit)="editPanel(p)" (delete)="deletePanel(p)"
+                                (toggleWidth)="togglePanelWidth(p)"></ngx-chart-panel>
+                        </div>
+                        <div class="col-12 text-center text-muted" *ngIf="group.panels.length === 0">
+                            暂无图表，点击右上角添加
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 text-center text-muted" *ngIf="appGroups.length === 0">
+                    暂无数据
+                </div>
+            </nb-accordion-item-body>
+        </nb-accordion-item>
+
+        <!-- Cluster Usage -->
+        <nb-accordion-item expanded [class.d-none]="sectionSelection.cluster === false && exporting">
+            <nb-accordion-item-header>
+                <div class="d-flex align-items-center w-100">
+                    <nb-checkbox [(ngModel)]="sectionSelection.cluster" (click)="$event.stopPropagation()"
+                        class="mr-2 no-export"></nb-checkbox>
+                    <span>集群资源</span>
+                    <button nbButton ghost size="tiny" status="info" class="ml-auto no-export"
+                        (click)="analyze($event, 'cluster')">
+                        <nb-icon icon="bulb-outline"></nb-icon> 智能分析
+                    </button>
+                    <button nbButton ghost size="tiny" status="primary" class="ml-2 no-export"
+                        (click)="addPanel($event, 'cluster')">
+                        <nb-icon icon="plus-outline"></nb-icon> 添加图表
+                    </button>
+                </div>
+            </nb-accordion-item-header>
+            <nb-accordion-item-body>
+                <div class="summary-container mb-3">
+                    <textarea nbInput fullWidth placeholder="输入集群资源使用总结..." [(ngModel)]="summaries.cluster"
+                        (ngModelChange)="saveSummaries()" rows="3" class="no-export"></textarea>
+                    <div class="summary-export-view export-only">{{ summaries.cluster }}</div>
+                </div>
+
+                <div *ngFor="let group of clusterGroups; let i = index; trackBy: trackByGroup"
+                    class="country-group-container mb-4">
+                    <div *ngIf="clusterGroups.length > 1" class="d-flex align-items-center mb-3">
+                        <h6 class="text-hint m-0 text-uppercase font-weight-bold" style="min-width: 80px;">{{
+                            group.country }}</h6>
+                        <div class="flex-grow-1 ml-3" style="border-bottom: 2px dashed #edf1f7;"></div>
+                    </div>
+
+                    <div class="row panel-container" cdkDropList cdkDropListOrientation="mixed"
+                        [cdkDropListData]="group.panels" (cdkDropListDropped)="drop($event, group.panels)">
+                        <div cdkDrag class="mb-4" *ngFor="let p of group.panels; trackBy: trackByPanel"
+                            [ngClass]="{'col-lg-12': p.config?.width === 12, 'col-lg-6': !p.config?.width || p.config.width !== 12}">
+                            <ngx-chart-panel [panel]="p" [start]="customStart" [end]="customEnd" [dept]="selectedDept"
+                                [colorIndex]="selectedDept !== 'all' ? i : 0" [country]="group.country"
+                                (edit)="editPanel(p)" (delete)="deletePanel(p)"
+                                (toggleWidth)="togglePanelWidth(p)"></ngx-chart-panel>
+                        </div>
+                        <div class="col-12 text-center text-muted" *ngIf="group.panels.length === 0">
+                            暂无图表，点击右上角添加
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 text-center text-muted" *ngIf="clusterGroups.length === 0">
+                    暂无数据
+                </div>
+            </nb-accordion-item-body>
+        </nb-accordion-item>
+    </nb-accordion>
+</div>

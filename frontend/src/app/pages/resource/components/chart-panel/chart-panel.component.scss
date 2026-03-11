@@ -1,0 +1,220 @@
+@import '../../../../@theme/styles/themes';
+
+:host {
+    display: block;
+    height: 100%;
+}
+
+nb-card {
+    height: 100%;
+    resize: both;
+    overflow: auto;
+    min-height: 450px;
+    min-width: 300px;
+    display: flex;
+    flex-direction: column;
+}
+
+nb-card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0.5rem 0.5rem 0 0.5rem;
+}
+
+.legend-container {
+    max-height: 160px; // Approximately 6 rows
+    overflow-y: auto;
+    display: flex;
+    flex-wrap: wrap;
+    padding-top: 10px;
+    border-top: 1px solid #edf1f7;
+    margin-top: 5px;
+    flex-shrink: 0;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin-right: 15px;
+    margin-bottom: 5px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    user-select: none;
+
+    &.disabled {
+        opacity: 0.5;
+    }
+
+    .legend-icon {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 5px;
+        flex-shrink: 0;
+    }
+
+    .legend-text {
+        white-space: nowrap;
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+.chart-panel-card {
+    min-height: 450px;
+    margin-bottom: 0;
+}
+
+nb-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+
+    .actions {
+        display: flex;
+        gap: 0.25rem;
+    }
+}
+
+.table-container {
+    height: 400px;
+    overflow: auto;
+    font-size: 0.85rem;
+
+    table {
+        margin-bottom: 0;
+        border-collapse: collapse;
+        width: 100%;
+
+        th,
+        td {
+            border-bottom: 1px solid #edf1f7;
+            padding: 4px 8px;
+            text-align: left;
+            background: transparent;
+            white-space: nowrap;
+            overflow: hidden;
+            max-width: 250px;
+
+            &.highlighted-cell {
+                background-color: rgba(51, 102, 255, 0.1) !important;
+                color: nb-theme(color-primary-600);
+                font-weight: 700;
+            }
+        }
+
+        th {
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+            font-weight: bold;
+            border-top: none;
+            border-bottom: 2px solid #edf1f7;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+    }
+}
+
+:host:hover nb-card-header .actions {
+    opacity: 1;
+}
+
+.chart-container {
+    flex: 1;
+    height: 100%;
+    width: 100%;
+    min-height: 200px;
+}
+
+.stat-container {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    .stat-value {
+        font-size: 3rem;
+        font-weight: bold;
+        color: nb-theme(color-primary-500);
+    }
+
+    .stat-label {
+        font-size: 1rem;
+        color: nb-theme(text-hint-color);
+    }
+}
+
+.text-small {
+    font-size: 0.75rem;
+}
+
+.no-data {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ccc;
+}
+
+.cell-with-view {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+
+    .view-icon {
+        cursor: pointer;
+        opacity: 0.9 !important;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+        color: nb-theme(color-primary-500);
+        margin-right: 2px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        &:hover {
+            opacity: 1 !important;
+            transform: scale(1.2);
+            color: nb-theme(color-primary-600);
+        }
+    }
+
+    .cell-content {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        flex: 1;
+    }
+}
+
+.cell-content-normal {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;
+    width: 100%;
+}
+
+nb-card.shared {
+    min-height: auto;
+    height: auto;
+
+    .table-container {
+        flex: none;
+        height: 400px;
+    }
+}

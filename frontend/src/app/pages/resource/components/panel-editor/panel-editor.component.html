@@ -1,0 +1,69 @@
+<nb-card class="editor-card">
+    <nb-card-header>{{ isEdit ? 'Edit Panel' : 'Add Panel' }}</nb-card-header>
+    <nb-card-body>
+        <form #form="ngForm">
+            <div class="form-group">
+                <label class="label">Title</label>
+                <input nbInput fullWidth [(ngModel)]="model.title" name="title" required>
+            </div>
+
+            <div class="form-group">
+                <label class="label">Data Source</label>
+                <nb-select fullWidth [(ngModel)]="model.data_source_id" name="datasource" required
+                    (selectedChange)="onDataSourceChange()">
+                    <nb-option *ngFor="let ds of filteredDataSources" [value]="ds.id">{{ ds.name }} ({{ ds.type
+                        }})</nb-option>
+                </nb-select>
+            </div>
+
+            <div class="form-group">
+                <label class="label">Chart Type</label>
+                <nb-select fullWidth [(ngModel)]="model.chart_type" name="type">
+                    <nb-option value="table" *ngIf="isSqlSource">Table (SQL Result)</nb-option>
+                    <nb-option value="line">Line Chart</nb-option>
+                    <nb-option value="bar">Bar Chart</nb-option>
+                    <nb-option value="pie">Pie Chart</nb-option>
+                    <nb-option value="stat" *ngIf="!isSqlSource">Stat (Single Value)</nb-option>
+                    <nb-option value="gauge" *ngIf="!isSqlSource">Bar Gauge</nb-option>
+                </nb-select>
+            </div>
+
+            <div class="form-group">
+                <label class="label">{{ isSqlSource ? 'SQL Query' : 'PromQL Query' }}</label>
+                <textarea nbInput fullWidth [(ngModel)]="model.promql_query" name="query" rows="4"
+                    [placeholder]="isSqlSource ? 'SELECT ...' : 'e.g. rate(node_cpu_seconds_total{mode!=\'idle\'}[5m])'"
+                    required></textarea>
+                <div class="caption-2 mt-1" *ngIf="!isSqlSource">Use <code>$dept</code> variable for department
+                    selection.</div>
+            </div>
+
+            <ng-container *ngIf="model.chart_type !== 'table'">
+                <div class="form-group" *ngIf="!isSqlSource">
+                    <label class="label">Legend Format (Optional)</label>
+                    <input nbInput fullWidth [(ngModel)]="legendFormat" name="legend"
+                        placeholder="e.g. {{ '{{instance}}' }}">
+                </div>
+
+                <div class="form-group">
+                    <label class="label">Unit (for Stat/Line/Bar)</label>
+                    <input nbInput fullWidth [(ngModel)]="unit" name="unit" placeholder="e.g. % or MB or count">
+                </div>
+
+                <div class="form-group" *ngIf="model.chart_type !== 'bar'">
+                    <label class="label mb-2">Legend Statistics</label>
+                    <div class="d-flex">
+                        <nb-checkbox [(ngModel)]="showMax" name="showMax">Max</nb-checkbox>
+                        <nb-checkbox [(ngModel)]="showMin" name="showMin" class="ml-3">Min</nb-checkbox>
+                        <nb-checkbox [(ngModel)]="showMean" name="showMean" class="ml-3">Mean</nb-checkbox>
+                        <nb-checkbox [(ngModel)]="showLast" name="showLast" class="ml-3">Last</nb-checkbox>
+                    </div>
+                </div>
+            </ng-container>
+
+        </form>
+    </nb-card-body>
+    <nb-card-footer>
+        <button nbButton status="basic" (click)="cancel()">Cancel</button>
+        <button nbButton status="primary" class="ml-2" (click)="submit()" [disabled]="!form.valid">Save</button>
+    </nb-card-footer>
+</nb-card>

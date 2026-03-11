@@ -1,0 +1,22 @@
+[source.crates-io]
+replace-with = 'rsproxy-sparse'
+
+[source.rsproxy]
+registry = "https://github.com/rsproxy-cn/crates.io-index"
+
+[source.rsproxy-sparse]
+registry = "sparse+https://rsproxy.cn/index/"
+
+[registries.rsproxy]
+index = "https://github.com/rsproxy-cn/crates.io-index"
+
+[net]
+git-fetch-with-cli = true
+
+# Default clippy flags for local development
+# To enforce strict checks (like in CI), use:
+# cargo clippy --all-targets -- --deny warnings --allow clippy::uninlined-format-args
+[alias]
+clippy-strict = "clippy --all-targets -- --deny warnings --allow clippy::uninlined-format-args"
+clippy-fix = "clippy --fix --all-targets --allow-dirty --allow-staged --allow-no-vcs -- --deny warnings --allow clippy::uninlined-format-args"
+

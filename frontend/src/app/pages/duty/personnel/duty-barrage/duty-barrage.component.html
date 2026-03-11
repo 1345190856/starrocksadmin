@@ -1,0 +1,21 @@
+<div class="duty-barrage-wrapper">
+    <div class="barrage-header">
+        <span class="pulse-icon"></span>
+        <span class="title">{{ title }}</span>
+    </div>
+    <div class="scroll-container">
+        <div class="scroll-content" [class.animate]="dutyItems.length > 1">
+            <div class="duty-group" *ngFor="let item of dutyItems">
+                <span class="time">{{ item.split(': ')[0] }}</span>
+                <span class="names">{{ item.split(': ')[1] }}</span>
+            </div>
+            <!-- Double for smooth marquee if needed, but for now we use a simpler fade/slide for short lists -->
+            <ng-container *ngIf="dutyItems.length > 5">
+                <div class="duty-group" *ngFor="let item of dutyItems">
+                    <span class="time">{{ item.split(': ')[0] }}</span>
+                    <span class="names">{{ item.split(': ')[1] }}</span>
+                </div>
+            </ng-container>
+        </div>
+    </div>
+</div>

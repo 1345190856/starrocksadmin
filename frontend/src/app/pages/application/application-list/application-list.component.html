@@ -1,0 +1,43 @@
+<div class="header-container mb-4">
+    <h4><nb-icon icon="browser-outline"></nb-icon> 应用管理</h4>
+</div>
+
+<div class="row">
+    <div [class]="region === '常用工具' ? 'col-12 mb-4' : 'col-12 col-xl-6 mb-4'" *ngFor="let region of regions">
+        <nb-card class="region-card">
+            <nb-card-header>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <span class="region-name font-weight-bold">{{ region }}</span>
+                    </div>
+                    <button nbButton size="tiny" status="primary" ghost (click)="add(region)">
+                        <nb-icon icon="plus-outline"></nb-icon>
+                    </button>
+                </div>
+            </nb-card-header>
+            <nb-card-body>
+                <div class="apps-grid">
+                    <div class="app-item" *ngFor="let app of groupedApplications[region]">
+                        <div class="app-content" (click)="openUrl(app.address)">
+                            <img [src]="getIconPath(app.type)" class="app-icon" [alt]="app.type">
+                            <span class="app-name text-truncate" [title]="app.name">{{ app.name }}</span>
+                        </div>
+                        <div class="app-actions">
+                            <button nbButton size="tiny" ghost status="info"
+                                (click)="edit(app); $event.stopPropagation()">
+                                <nb-icon icon="edit-2-outline"></nb-icon>
+                            </button>
+                            <button nbButton size="tiny" ghost status="danger"
+                                (click)="delete(app); $event.stopPropagation()">
+                                <nb-icon icon="trash-2-outline"></nb-icon>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="no-apps" *ngIf="groupedApplications[region]?.length === 0">
+                        <p class="text-hint mb-0">暂无应用，点击右上角加号添加</p>
+                    </div>
+                </div>
+            </nb-card-body>
+        </nb-card>
+    </div>
+</div>

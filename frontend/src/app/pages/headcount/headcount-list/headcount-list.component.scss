@@ -1,0 +1,120 @@
+@use '@nebular/theme/styles/theming' as *;
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h3 {
+        margin: 0;
+    }
+
+    .actions {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+
+        input {
+            width: 300px;
+        }
+    }
+}
+
+.columns-selector {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background-color: nb-theme(background-basic-color-2);
+    border: 1px solid nb-theme(divider-color);
+    border-radius: 4px;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+
+    .label {
+        font-weight: bold;
+        white-space: nowrap;
+        margin-top: 0.2rem;
+    }
+
+    .checkbox-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+
+        nb-checkbox {
+            margin-bottom: 0.25rem;
+        }
+    }
+}
+
+.table-responsive {
+    overflow-x: auto;
+    min-height: 400px;
+
+    table {
+        min-width: 100%;
+
+        th {
+            white-space: nowrap;
+            background-color: nb-theme(background-basic-color-2);
+            font-weight: 600;
+
+            &.sortable {
+                cursor: pointer;
+                user-select: none;
+
+                &:hover {
+                    background-color: nb-theme(background-basic-color-3);
+                }
+
+                nb-icon {
+                    font-size: 1rem;
+                    margin-left: 0.25rem;
+                    color: nb-theme(text-hint-color);
+                    vertical-align: middle;
+
+                    &.active {
+                        color: nb-theme(color-primary-500);
+                    }
+                }
+            }
+        }
+
+        td {
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+    }
+}
+
+.pagination-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .page-size-selector {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        .page-select {
+            min-width: 80px;
+        }
+    }
+
+    .pagination-buttons {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        .page-info {
+            margin-right: 1rem;
+            color: nb-theme(text-hint-color);
+        }
+
+        .current-page {
+            font-weight: bold;
+            padding: 0 0.5rem;
+        }
+    }
+}

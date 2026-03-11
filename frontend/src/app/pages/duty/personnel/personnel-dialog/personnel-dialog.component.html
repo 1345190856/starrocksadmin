@@ -1,0 +1,67 @@
+<nb-card>
+    <nb-card-header>{{ personnel ? '编辑人员' : '添加人员' }}</nb-card-header>
+    <nb-card-body>
+        <form #form="ngForm">
+            <div class="form-group">
+                <label for="name" class="label">姓名 *</label>
+                <input nbInput fullWidth id="name" name="name" [(ngModel)]="model.name" required
+                    (input)="onNameInput($event.target.value)" [nbAutocomplete]="auto">
+                <nb-autocomplete #auto (selectedChange)="onEmployeeSelected($event)"
+                    [handleDisplayFn]="handleDisplayFn">
+                    <nb-option *ngFor="let employee of filteredEmployees$ | async" [value]="employee">
+                        {{ employee.name }} ({{ employee.orgName }})
+                    </nb-option>
+                </nb-autocomplete>
+            </div>
+            <div class="form-group row">
+                <div class="col-md-6">
+                    <label for="org1" class="label">一级组织 (Org Level 2)</label>
+                    <input nbInput fullWidth id="org1" name="org1" [(ngModel)]="model.org_lvl1">
+                </div>
+                <div class="col-md-6">
+                    <label for="org2" class="label">二级组织 (Org Name)</label>
+                    <input nbInput fullWidth id="org2" name="org2" [(ngModel)]="model.org_lvl2">
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-md-6">
+                    <label for="email" class="label">邮箱 *</label>
+                    <input nbInput fullWidth id="email" name="email" [(ngModel)]="model.email" required email>
+                </div>
+                <div class="col-md-6">
+                    <label for="phone" class="label">电话 *</label>
+                    <input nbInput fullWidth id="phone" name="phone" [(ngModel)]="model.phone" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="label">值班平台</label>
+                <nb-select fullWidth [(ngModel)]="model.duty_platform" name="duty_platform" placeholder="请选择值班平台">
+                    <nb-option *ngFor="let p of platforms" [value]="p">{{ p }}</nb-option>
+                </nb-select>
+            </div>
+            <div class="form-group">
+                <label class="label">负责域</label>
+                <div class="tag-input-container">
+                    <div class="tag-list">
+                        <span class="custom-tag" *ngFor="let tag of getDomainTags(); let i = index">
+                            {{ tag }}
+                            <nb-icon icon="close-outline" (click)="removeDomainTag(i)"></nb-icon>
+                        </span>
+                    </div>
+                    <input nbInput fullWidth placeholder="输入负责域后按回车添加" #domainInput
+                        (keyup.enter)="addDomainTag(domainInput)">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="label">国家</label>
+                <nb-select fullWidth multiple [(ngModel)]="selectedCountries" name="countries" placeholder="请选择国家">
+                    <nb-option *ngFor="let c of allCountries" [value]="c">{{ c }}</nb-option>
+                </nb-select>
+            </div>
+        </form>
+    </nb-card-body>
+    <nb-card-footer>
+        <button nbButton status="basic" (click)="cancel()">取消</button>
+        <button nbButton status="primary" class="ml-2" (click)="submit()" [disabled]="!form.valid">保存</button>
+    </nb-card-footer>
+</nb-card>

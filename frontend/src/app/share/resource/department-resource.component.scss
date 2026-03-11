@@ -1,0 +1,78 @@
+@import '../../@theme/styles/themes';
+
+:host {
+    display: block;
+    height: 100%;
+}
+
+.custom-filters {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+
+    nb-select {
+        min-width: 150px;
+    }
+}
+
+nb-accordion {
+    box-shadow: none;
+    background: transparent;
+}
+
+nb-accordion-item {
+    margin-bottom: 1rem;
+    border: 1px solid nb-theme(divider-color);
+    background: nb-theme(card-background-color);
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+nb-accordion-item-header {
+    font-weight: bold;
+    font-size: 1.1rem;
+    align-items: center;
+}
+
+.summary-container {
+    textarea {
+        border-radius: 4px;
+        background: nb-theme(background-basic-color-2);
+        border: 1px solid nb-theme(divider-color);
+        padding: 0.75rem;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+
+        &:focus {
+            background: nb-theme(background-basic-color-1);
+        }
+    }
+}
+
+// PDF Export helper
+.export-only {
+    display: none !important;
+}
+
+:host-context(.exporting) .no-export,
+.exporting .no-export {
+    display: none !important;
+}
+
+:host-context(.exporting) .export-only,
+.exporting .export-only {
+    display: block !important;
+}
+
+.summary-export-view {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+    border-radius: 4px;
+    background: nb-theme(background-basic-color-2);
+    border: 1px solid nb-theme(divider-color);
+    padding: 0.75rem;
+    font-size: 0.95rem;
+    min-height: 80px;
+    color: nb-theme(text-basic-color);
+}

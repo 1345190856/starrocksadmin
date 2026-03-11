@@ -1,0 +1,146 @@
+<nb-card class="asset-dialog">
+    <nb-card-header>
+        <div class="header-content">
+            <span>{{ mode === 'add' ? '新增资产信息' : '编辑资产信息' }}</span>
+            <button *ngIf="mode === 'add'" nbButton size="small" status="success" (click)="addRow()">
+                <nb-icon icon="plus-outline"></nb-icon> 添加一行
+            </button>
+        </div>
+    </nb-card-header>
+    <nb-card-body>
+        <div *ngFor="let item of items; let i = index" class="item-container"
+            [class.with-border]="mode === 'add' && items.length > 1">
+            <div class="item-header" *ngIf="mode === 'add' && items.length > 1">
+                <span class="label">资产 #{{ i + 1 }}</span>
+                <button nbButton size="tiny" ghost status="danger" (click)="removeRow(i)">
+                    <nb-icon icon="trash-2-outline"></nb-icon> 删除
+                </button>
+            </div>
+            <!-- Row 1: Instance Type, Name, ID -->
+            <div class="row">
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label class="label">实例类型 <span class="text-danger">*</span></label>
+                        <nb-select fullWidth [(selected)]="item.instance_type" placeholder="请选择">
+                            <nb-option value="服务器">服务器</nb-option>
+                            <nb-option value="容器">容器</nb-option>
+                        </nb-select>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label class="label">实例名称</label>
+                        <input nbInput fullWidth [(ngModel)]="item.instance_name" placeholder="实例名称">
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label class="label">实例编号</label>
+                        <input nbInput fullWidth [(ngModel)]="item.instance_id" placeholder="实例编号">
+                    </div>
+                </div>
+            </div>
+            <!-- Row 2: Private IP, EIP -->
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="label">内网IP <span class="text-danger">*</span></label>
+                        <input nbInput fullWidth [(ngModel)]="item.private_ip" placeholder="内网IP">
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="label">EIP</label>
+                        <input nbInput fullWidth [(ngModel)]="item.public_ip" placeholder="EIP">
+                    </div>
+                </div>
+            </div>
+            <!-- Row 3: Manual Service -->
+            <div class="form-group">
+                <label class="label">服务类型 (人工)</label>
+                <input nbInput fullWidth #tagInput placeholder="输入服务名按回车添加"
+                    (keyup.enter)="addServiceTag(item, tagInput)">
+                <div class="tags-list">
+                    <div class="tag-item" *ngFor="let tag of getServiceTags(item.manual_service); let j = index">
+                        <span>{{ tag }}</span>
+                        <nb-icon icon="close-outline" class="delete-icon" (click)="removeServiceTag(item, j)"></nb-icon>
+                    </div>
+                </div>
+            </div>
+            <!-- Row 4: CPU, Memory, Storage, Network Identifier -->
+            <div class="row">
+                <div class="col-sm-3">
+                    <div class="form-group">
+                        <label class="label">CPU</label>
+                        <input nbInput fullWidth [(ngModel)]="item.cpu" placeholder="e.g. 8">
+                    </div>
+                </div>
+                <div class="col-sm-3">
+                    <div class="form-group">
+                        <label class="label">内存</label>
+                        <input nbInput fullWidth [(ngModel)]="item.memory" placeholder="e.g. 16G">
+                    </div>
+                </div>
+                <div class="col-sm-3">
+                    <div class="form-group">
+                        <label class="label">存储</label>
+                        <input nbInput fullWidth [(ngModel)]="item.storage" placeholder="e.g. 500G">
+                    </div>
+                </div>
+                <div class="col-sm-3">
+                    <div class="form-group">
+                        <label class="label">网络标识</label>
+                        <input nbInput fullWidth [(ngModel)]="item.network_identifier" placeholder="网络标识">
+                    </div>
+                </div>
+            </div>
+            <!-- Row 5: Release, Country, Region -->
+            <div class="row">
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label class="label">发行版本</label>
+                        <input nbInput fullWidth [(ngModel)]="item.release" placeholder="e.g. CentOS 7.9">
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label class="label">国家</label>
+                        <input nbInput fullWidth [(ngModel)]="item.country" placeholder="国家">
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="form-group">
+                        <label class="label">地区</label>
+                        <input nbInput fullWidth [(ngModel)]="item.region" placeholder="地区">
+                    </div>
+                </div>
+            </div>
+            <!-- Row 6: Project Name, Ownership -->
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="label">项目名称</label>
+                        <input nbInput fullWidth [(ngModel)]="item.project_name" placeholder="项目名称">
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="label">项目归属</label>
+                        <input nbInput fullWidth [(ngModel)]="item.project_ownership" placeholder="项目归属">
+                    </div>
+                </div>
+            </div>
+            <!-- Row 7: Remark -->
+            <div class="form-group">
+                <label class="label">备注</label>
+                <textarea nbInput fullWidth [(ngModel)]="item.remark" placeholder="备注"></textarea>
+            </div>
+        </div>
+    </nb-card-body>
+    <nb-card-footer>
+        <div class="footer-actions">
+            <button nbButton status="basic" (click)="cancel()">取消</button>
+            <button nbButton status="primary" (click)="submit()">保存</button>
+        </div>
+    </nb-card-footer>
+</nb-card>

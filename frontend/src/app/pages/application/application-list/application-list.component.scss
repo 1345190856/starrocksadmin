@@ -1,0 +1,97 @@
+@import '../../../@theme/styles/themes';
+
+@include nb-install-component() {
+    .region-card {
+        nb-card-header {
+            padding: 0.75rem 1.25rem;
+            border-bottom: 1px solid nb-theme(divider-color);
+        }
+
+        nb-card-body {
+            min-height: 120px;
+        }
+    }
+
+    .region-name {
+        font-size: 1.1rem;
+        color: nb-theme(text-basic-color);
+    }
+
+    .header-icon {
+        width: 24px;
+        height: 24px;
+        object-fit: contain;
+    }
+
+    .apps-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 1rem;
+    }
+
+    .app-item {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 1rem;
+        border-radius: 8px;
+        background: nb-theme(background-basic-color-2);
+        transition: all 0.2s ease-in-out;
+        cursor: pointer;
+
+        &:hover {
+            background: nb-theme(background-basic-color-3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+            .app-actions {
+                opacity: 1;
+            }
+        }
+    }
+
+    .app-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .app-icon {
+        width: 48px;
+        height: 48px;
+        object-fit: contain;
+        margin-bottom: 0.5rem;
+    }
+
+    .app-name {
+        font-size: 0.9rem;
+        text-align: center;
+        width: 100%;
+    }
+
+    .app-actions {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        display: flex;
+        opacity: 0;
+        transition: opacity 0.2s;
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 4px;
+
+        [nbButton] {
+            padding: 0.25rem;
+        }
+    }
+
+    .no-apps {
+        grid-column: 1 / -1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 80px;
+    }
+}

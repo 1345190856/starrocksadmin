@@ -1,0 +1,4 @@
+# Rust toolchain configuration for StarRocks Admin Backend
+[toolchain]
+channel = "stable"
+components = ["rustfmt", "clippy", "rust-analyzer"]

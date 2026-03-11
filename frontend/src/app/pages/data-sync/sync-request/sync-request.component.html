@@ -1,0 +1,416 @@
+<nb-card>
+    <nb-card-header>
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="title-group">
+                <h3>数据同步</h3>
+                <div class="tab-buttons">
+                    <button nbButton [status]="activeTab === 'config' ? 'primary' : 'basic'" size="small"
+                        (click)="selectTab('config')">
+                        同步配置
+                    </button>
+                    <button nbButton [status]="activeTab === 'records' ? 'primary' : 'basic'" size="small"
+                        (click)="selectTab('records')">
+                        申请记录
+                    </button>
+                    <button *ngIf="activeTab === 'approval'" nbButton status="primary" size="small">
+                        审批
+                    </button>
+                </div>
+            </div>
+            <button *ngIf="isAdmin" nbButton ghost status="info" size="small" (click)="openConfig()">
+                <nb-icon icon="settings-2-outline"></nb-icon> 配置中心
+            </button>
+        </div>
+    </nb-card-header>
+
+    <nb-card-body>
+        <!-- Tab 1: Sync Config -->
+        <div class="main-content" *ngIf="activeTab === 'config'">
+            <div class="row align-items-center mb-3">
+                <div class="col-auto d-flex align-items-center">
+                    <label class="label mr-2 mb-0">选择库所在国家:</label>
+                    <nb-select [(selected)]="country" size="small" style="width: 150px;" placeholder="请选择国家">
+                        <nb-option *ngFor="let c of countries" [value]="c">{{ c }}</nb-option>
+                    </nb-select>
+                </div>
+            </div>
+
+            <div class="sync-panels">
+                <!-- Source Panel -->
+                <nb-card class="panel-card source-panel">
+                    <nb-card-header>源数据库 (从库)</nb-card-header>
+                    <nb-card-body>
+                        <div class="conn-form">
+                            <div class="row">
+                                <div class="col-8"><input nbInput fullWidth placeholder="源IP/HostName"
+                                        [(ngModel)]="sourceConn.ip" size="small"></div>
+                                <div class="col-4"><input nbInput fullWidth placeholder="端口"
+                                        [(ngModel)]="sourceConn.port" size="small"></div>
+                            </div>
+                        </div>
+
+                        <div class="db-tree mt-3">
+                            <div *ngIf="!sourceConnected" class="placeholder">请连接源数据库以获取表信息</div>
+                            <div *ngIf="sourceConnected && sourceDatabases.length === 0" class="placeholder">暂无表数据</div>
+
+                            <div *ngFor="let db of sourceDatabases" class="db-group">
+                                <div class="db-header" (click)="toggleDb(db)">
+                                    <nb-icon
+                                        [icon]="db.expanded ? 'chevron-down-outline' : 'chevron-right-outline'"></nb-icon>
+                                    <nb-checkbox [(ngModel)]="db.allSelected" (click)="$event.stopPropagation()"
+                                        (checkedChange)="toggleDbSelection(db)"></nb-checkbox>
+                                    <span class="db-name">{{ db.name }}</span>
+                                    <nb-spinner *ngIf="db.loading" size="tiny" status="primary"
+                                        class="ml-2"></nb-spinner>
+                                </div>
+                                <div *ngIf="db.expanded" class="table-list">
+                                    <div *ngFor="let table of db.tables" class="table-item">
+                                        <nb-checkbox [(ngModel)]="table.selected" size="small"></nb-checkbox>
+                                        <span class="table-name">{{ table.name }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end mt-2">
+                            <button nbButton status="primary" size="small" [nbSpinner]="sourceLoading"
+                                [disabled]="sourceLoading" (click)="connectSource()">
+                                <nb-icon icon="flash-outline"></nb-icon> 连接
+                            </button>
+                        </div>
+                    </nb-card-body>
+                </nb-card>
+
+                <!-- Divider with actions -->
+                <div class="transfer-actions">
+                    <button nbButton status="info" size="medium" (click)="moveToDest()" [disabled]="!sourceConnected">
+                        <nb-icon icon="chevron-right-outline"></nb-icon>
+                    </button>
+                    <button nbButton status="info" size="medium" (click)="removeFromDest()"
+                        [disabled]="selectedTables.length === 0">
+                        <nb-icon icon="chevron-left-outline"></nb-icon>
+                    </button>
+                </div>
+
+                <!-- Destination Panel -->
+                <nb-card class="panel-card dest-panel">
+                    <nb-card-header>目的数据库</nb-card-header>
+                    <nb-card-body>
+                        <div class="conn-form">
+                            <div class="row">
+                                <div class="col-8"><input nbInput fullWidth placeholder="目的IP/HostName"
+                                        [(ngModel)]="destConn.ip" size="small"></div>
+                                <div class="col-4"><input nbInput fullWidth placeholder="端口" [(ngModel)]="destConn.port"
+                                        size="small"></div>
+                            </div>
+                        </div>
+
+                        <div class="selected-tables mt-3">
+                            <div *ngIf="selectedTables.length === 0" class="placeholder">待迁移区域 (为空)</div>
+                            <div *ngFor="let table of selectedTables" class="table-item active">
+                                <nb-checkbox [(ngModel)]="table.selected" size="small"></nb-checkbox>
+                                <span class="db-prefix">{{ table.dbName }}.</span>
+                                <span class="table-name">{{ table.name }}</span>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end mt-2">
+                            <button *ngIf="selectedTables.length > 0" nbButton ghost status="danger" size="small"
+                                class="mr-2" (click)="clearSelectedTables()">
+                                <nb-icon icon="trash-2-outline"></nb-icon> 重置
+                            </button>
+                            <button nbButton status="primary" size="small" [nbSpinner]="destLoading"
+                                [disabled]="destLoading" (click)="connectDest()">
+                                <nb-icon icon="flash-outline"></nb-icon> 连接
+                            </button>
+                        </div>
+                    </nb-card-body>
+                </nb-card>
+            </div>
+
+            <div class="remark-section">
+                <label class="label">工单备注:</label>
+                <textarea nbInput fullWidth placeholder="请输入工单备注信息（可选）" [(ngModel)]="remark" rows="2"></textarea>
+            </div>
+
+            <div class="submit-section">
+                <button nbButton status="success" size="large" (click)="submitMigration()"
+                    [disabled]="selectedTables.length === 0 || !destConnected">
+                    提交工单
+                </button>
+            </div>
+        </div>
+
+        <!-- Tab 2: Sync Records -->
+        <div class="records-content" *ngIf="activeTab === 'records'" [nbSpinner]="recordsLoading">
+            <table class="table table-bordered table-striped custom-table">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">国家</th>
+                        <th style="width: 180px;">源库</th>
+                        <th style="width: 180px;">目的库</th>
+                        <th style="width: 250px;">选择表</th>
+                        <th style="width: 100px;">申请人</th>
+                        <th style="width: 160px;">申请时间</th>
+                        <th style="width: 120px;">处理人</th>
+                        <th style="width: 100px;">状态</th>
+                        <th style="width: 160px;">完成时间</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let row of syncRecords">
+                        <td>
+                            <div class="cell-content" [title]="row.country">{{ row.country }}</div>
+                        </td>
+                        <td>
+                            <div class="cell-content" [title]="row.source_ip + ':' + row.source_port">{{ row.source_ip
+                                }}:{{ row.source_port }}</div>
+                        </td>
+                        <td>
+                            <div class="cell-content" [title]="row.dest_ip + ':' + row.dest_port">{{ row.dest_ip }}:{{
+                                row.dest_port }}</div>
+                        </td>
+                        <td>
+                            <div class="cell-content" [nbTooltip]="getSelectedTablesText(row.selected_tables)"
+                                nbTooltipPlacement="top" nbTooltipStatus="primary">
+                                {{ getSelectedTablesText(row.selected_tables) }}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="cell-content" [title]="row.creator">{{ row.creator }}</div>
+                        </td>
+                        <td>
+                            <div class="cell-content" [title]="row.created_at | date:'yyyy-MM-dd HH:mm:ss'">{{
+                                row.created_at | date:'yyyy-MM-dd HH:mm:ss' }}</div>
+                        </td>
+                        <td>
+                            <div class="cell-content overflow-visible">
+                                <nb-select [(selected)]="row.processor" size="small" [disabled]="!isAdmin"
+                                    (selectedChange)="onProcessorChange(row)" placeholder="处理人" fullWidth>
+                                    <nb-option *ngFor="let p of dutyPersonnel" [value]="p.name">{{ p.name }}</nb-option>
+                                </nb-select>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="cell-content d-flex align-items-center">
+                                <button *ngIf="row.approval_status === '待审批'" nbButton status="warning" size="tiny"
+                                    [disabled]="!isAdmin" (click)="goToApproval(row)">待审批</button>
+                                <button *ngIf="row.approval_status === '处理中'" nbButton status="info" size="tiny"
+                                    [disabled]="!isAdmin" (click)="goToApproval(row)">处理中</button>
+                                <span *ngIf="row.approval_status === '已完成'" class="text-success"
+                                    style="font-weight: bold; font-size: 13px;">
+                                    <nb-icon icon="checkmark-circle-2-outline"></nb-icon> 已完成
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="cell-content" [title]="row.finished_at | date:'yyyy-MM-dd HH:mm:ss'">{{
+                                row.finished_at | date:'yyyy-MM-dd HH:mm:ss' }}</div>
+                        </td>
+                    </tr>
+                    <tr *ngIf="syncRecords.length === 0 && !recordsLoading">
+                        <td colspan="9" class="text-center">暂无记录</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Tab 3: Approval -->
+        <div class="approval-content" *ngIf="activeTab === 'approval' && selectedRecord">
+            <nb-card status="info">
+                <nb-card-header>同步工单审批</nb-card-header>
+                <nb-card-body>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>国家:</strong> {{ selectedRecord.country }}</p>
+                            <p><strong>源库:</strong> {{ selectedRecord.source_ip }}:{{ selectedRecord.source_port }}</p>
+                            <p><strong>目的库:</strong> {{ selectedRecord.dest_ip }}:{{ selectedRecord.dest_port }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>申请人:</strong> {{ selectedRecord.creator }}</p>
+                            <p><strong>申请时间:</strong> {{ selectedRecord.created_at | date:'yyyy-MM-dd HH:mm:ss' }}</p>
+                            <p><strong>备注:</strong> {{ selectedRecord.remark || '无' }}</p>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <h6>选择迁移的表:</h6>
+                        <div class="approval-table-list bg-light p-3 border rounded mb-3"
+                            style="max-height: 150px; overflow-y: auto;">
+                            <div *ngFor="let table of approvalTables" class="d-flex align-items-center mb-1">
+                                <nb-checkbox [(ngModel)]="table.selected" size="small"></nb-checkbox>
+                                <span class="ml-2" style="font-family: monospace; font-size: 13px;">{{ table.dbName
+                                    }}.{{ table.name }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <nb-stepper orientation="horizontal" [disableStepNavigation]="false">
+                        <nb-step label="数据校验">
+                            <div class="step-content p-4">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <h6>数据量校验</h6>
+                                        <p class="text-hint" style="font-size: 12px;">自动查询源表数据量，计数 < 5000万 标记为通过。</p>
+                                    </div>
+                                    <button nbButton status="info" size="small" (click)="validateData()"
+                                        [nbSpinner]="validationLoading">
+                                        <nb-icon icon="play-outline"></nb-icon> 开始校验
+                                    </button>
+                                </div>
+
+                                <div class="validation-results bg-white border rounded p-3"
+                                    style="max-height: 200px; overflow-y: auto;">
+                                    <div *ngFor="let table of approvalTables">
+                                        <div *ngIf="table.selected"
+                                            class="d-flex justify-content-between align-items-center mb-2 border-bottom pb-1">
+                                            <span style="font-family: monospace; font-size: 12px;">{{ table.dbName }}.{{
+                                                table.name }}</span>
+
+                                            <div class="d-flex align-items-center">
+                                                <nb-spinner *ngIf="table.validationStatus === 'loading'" size="tiny"
+                                                    status="info"></nb-spinner>
+
+                                                <div *ngIf="table.validationStatus === 'success'"
+                                                    class="d-flex align-items-center">
+                                                    <span class="mr-2" style="font-size: 12px; color: #8f9bb3;">{{
+                                                        table.validationResult.count | number }} 行</span>
+                                                    <nb-tag *ngIf="table.validationResult.passed" text="通过"
+                                                        status="success" size="tiny"></nb-tag>
+                                                    <nb-tag *ngIf="!table.validationResult.passed" text="超限"
+                                                        status="danger" size="tiny"
+                                                        nbTooltip="数据量超过5000万，建议分批迁移"></nb-tag>
+                                                </div>
+
+                                                <div *ngIf="table.validationStatus === 'failed'"
+                                                    class="d-flex align-items-center">
+                                                    <nb-tag text="失败" status="warning" size="tiny"
+                                                        [nbTooltip]="table.validationError"></nb-tag>
+                                                </div>
+
+                                                <span *ngIf="!table.validationStatus" class="text-hint"
+                                                    style="font-size: 11px;">待校验</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-end mt-3">
+                                    <button nbButton nbStepperNext status="primary"
+                                        [disabled]="validationLoading || !hasPassedTables()"
+                                        (click)="generateSchemas()">下一步</button>
+                                </div>
+                            </div>
+                        </nb-step>
+
+                        <nb-step label="配置生成">
+                            <div class="step-content p-3 border rounded bg-white">
+                                <div class="row">
+                                    <div class="col-md-3 border-right">
+                                        <div class="label mb-2">切换表查看配置:</div>
+                                        <div class="table-nav-list" style="max-height: 300px; overflow-y: auto;">
+                                            <div *ngFor="let table of approvalTables; let i = index"
+                                                (click)="selectApprovalTable(i)"
+                                                [class.active-nav]="currentApprovalTableIndex === i"
+                                                class="nav-item-sql" [hidden]="!table.selected">
+                                                {{ table.name }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-9">
+                                        <div *ngIf="approvalTables[currentApprovalTableIndex]"
+                                            class="h-100 d-flex flex-column">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span class="label">SQL 配置 ({{
+                                                    approvalTables[currentApprovalTableIndex].dbName }}.{{
+                                                    approvalTables[currentApprovalTableIndex].name }})</span>
+                                                <nb-icon icon="info-outline" nbTooltip="修改后将自动保存当前表的配置"
+                                                    status="hint"></nb-icon>
+                                            </div>
+                                            <textarea nbInput fullWidth rows="10"
+                                                [(ngModel)]="approvalTables[currentApprovalTableIndex].sql"
+                                                [nbSpinner]="approvalTables[currentApprovalTableIndex].schemaLoading"
+                                                style="font-family: monospace; font-size: 13px;"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between mt-3">
+                                    <button nbButton nbStepperPrevious status="basic">上一步</button>
+                                    <button nbButton nbStepperNext status="primary">下一步</button>
+                                </div>
+                            </div>
+                        </nb-step>
+
+                        <nb-step label="建表">
+                            <div class="step-content p-4 text-center">
+                                <div class="mb-4">
+                                    <nb-icon icon="layers-outline" status="primary" style="font-size: 3rem;"></nb-icon>
+                                    <h6 class="mt-2">一键建表</h6>
+                                    <p class="text-hint">准备根据生成的 SQL 在目的库执行建表操作。</p>
+                                </div>
+                                <button nbButton status="info" outline size="small" class="mb-4">
+                                    <nb-icon icon="play-outline"></nb-icon> 执行一键建表
+                                </button>
+                                <div class="d-flex justify-content-between">
+                                    <button nbButton nbStepperPrevious status="basic">上一步</button>
+                                    <button nbButton nbStepperNext status="primary">下一步</button>
+                                </div>
+                            </div>
+                        </nb-step>
+
+                        <nb-step label="同步数据">
+                            <div class="step-content p-4 text-center">
+                                <div class="mb-4">
+                                    <nb-icon icon="refresh-outline" status="primary" style="font-size: 3rem;"
+                                        [nbSpinner]="false"></nb-icon>
+                                    <h6 class="mt-2">启动同步</h6>
+                                    <p class="text-hint">启动 DataX/Flink 同步任务。</p>
+                                </div>
+                                <button nbButton status="info" outline size="small" class="mb-4">
+                                    <nb-icon icon="flash-outline"></nb-icon> 开始同步
+                                </button>
+                                <div class="d-flex justify-content-between">
+                                    <button nbButton nbStepperPrevious status="basic">上一步</button>
+                                    <button nbButton nbStepperNext status="success">完成流程</button>
+                                </div>
+                            </div>
+                        </nb-step>
+
+                        <nb-step label="结束">
+                            <div class="step-content p-4 text-center">
+                                <nb-icon icon="checkmark-circle-2-outline" status="success"
+                                    style="font-size: 4rem;"></nb-icon>
+                                <h5 class="mt-3">流程已完成</h5>
+                                <p class="text-hint">工单已自动提交并完结。</p>
+                                <div class="mt-4">
+                                    <button nbButton status="success" (click)="approveSync()">
+                                        完结工单并返回列表
+                                    </button>
+                                </div>
+                            </div>
+                        </nb-step>
+                    </nb-stepper>
+                </nb-card-body>
+            </nb-card>
+        </div>
+    </nb-card-body>
+</nb-card>
+
+<!-- Config Dialog -->
+<ng-template #configDialog let-data let-ref="dialogRef">
+    <nb-card style="width: 500px; margin: 0;">
+        <nb-card-header>配置中心 - 数据同步 Webhook</nb-card-header>
+        <nb-card-body>
+            <div class="form-group">
+                <label class="label">Webhook URL:</label>
+                <input nbInput fullWidth [(ngModel)]="webhookUrl" placeholder="https://example.com/webhook/..." />
+                <p class="text-hint mt-2" style="font-size: 12px; color: #8f9bb3;">
+                    连接数据库时将通过此 Webhook 发送连接请求。
+                </p>
+            </div>
+        </nb-card-body>
+        <nb-card-footer>
+            <div class="d-flex justify-content-end" style="gap: 8px;">
+                <button nbButton ghost (click)="ref.close()">取消</button>
+                <button nbButton status="primary" (click)="saveConfig(ref)">保存配置</button>
+            </div>
+        </nb-card-footer>
+    </nb-card>
+</ng-template>

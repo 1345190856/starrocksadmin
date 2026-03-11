@@ -1,0 +1,89 @@
+.asset-dialog {
+    min-width: 700px;
+    max-width: 900px;
+
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    nb-card-body {
+        max-height: 75vh;
+        overflow-y: auto;
+    }
+
+    .item-container {
+        padding-bottom: 1.5rem;
+        margin-bottom: 1.5rem;
+
+        &.with-border {
+            border-bottom: 1px dashed nb-theme(divider-color);
+        }
+
+        &:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+    }
+
+    .item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        background-color: nb-theme(background-basic-color-2);
+        padding: 0.5rem;
+        border-radius: 4px;
+
+        .label {
+            font-weight: bold;
+            color: nb-theme(text-hint-color);
+        }
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .footer-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+    }
+
+    .tags-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 8px;
+
+        .tag-item {
+            position: relative;
+            padding: 4px 12px;
+            background-color: nb-theme(background-basic-color-3);
+            border: 1px solid nb-theme(border-basic-color-3);
+            border-radius: 4px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            cursor: default;
+
+            .delete-icon {
+                font-size: 1rem;
+                margin-left: 4px;
+                cursor: pointer;
+                color: nb-theme(text-danger-color);
+                opacity: 0;
+                transition: opacity 0.2s;
+            }
+
+            &:hover {
+                .delete-icon {
+                    opacity: 1;
+                }
+            }
+        }
+    }
+}

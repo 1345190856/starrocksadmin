@@ -1,0 +1,69 @@
+<div class="row align-items-center mb-3 mt-4">
+    <div class="col-6">
+        <h4><nb-icon icon="settings-2-outline"></nb-icon> 数据源配置</h4>
+    </div>
+    <div class="col-6 text-right">
+        <button nbButton status="primary" (click)="edit()">
+            <nb-icon icon="plus-outline"></nb-icon> 添加数据源
+        </button>
+    </div>
+</div>
+
+<ng-container *ngFor="let region of regionKeys; let first = first">
+    <div class="region-divider" *ngIf="!first">
+        <div class="line"></div>
+    </div>
+    <h5 class="region-title my-3">{{ region }}</h5>
+    <div class="row">
+        <div class="col-xxl-3 col-lg-4 col-md-6 mb-4" *ngFor="let ds of groupedDataSources[region]">
+            <nb-card class="ds-card h-100">
+                <nb-card-header>
+                    <div class="d-flex align-items-center justify-content-between w-100">
+                        <div class="d-flex align-items-center flex-grow-1 overflow-hidden">
+                            <img [src]="getIconPath(ds.type)" class="ds-icon-img mr-2" [alt]="ds.type">
+                            <span class="ds-name font-weight-bold text-truncate" [title]="ds.name">{{ ds.name }}</span>
+                        </div>
+                        <span class="ds-type-badge ml-2" [ngClass]="'type-' + ds.type">{{ ds.type | uppercase }}</span>
+                    </div>
+                </nb-card-header>
+                <nb-card-body>
+                    <div class="ds-info-grid">
+                        <div class="info-item">
+                            <div class="label">URL</div>
+                            <div class="value" [title]="ds.url">{{ ds.url }}</div>
+                        </div>
+                        <div class="info-item" *ngIf="ds.username">
+                            <div class="label">User</div>
+                            <div class="value">{{ ds.username }}</div>
+                        </div>
+                        <div class="info-item" *ngIf="hasMappings(ds.fe_mapping)">
+                            <div class="label">Network Mapping</div>
+                            <div class="mapping-list">
+                                <div class="mapping-badge" *ngFor="let item of ds.fe_mapping | keyvalue">
+                                    <span class="m-key">{{item.key}}</span>
+                                    <nb-icon icon="arrow-forward-outline"></nb-icon>
+                                    <span class="m-val">{{item.value}}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </nb-card-body>
+                <nb-card-footer>
+                    <div class="d-flex gap-2">
+                        <button nbButton fullWidth ghost size="small" status="info" (click)="edit(ds)">
+                            <nb-icon icon="edit-outline"></nb-icon> 编辑
+                        </button>
+                        <button nbButton fullWidth ghost size="small" status="danger" (click)="delete(ds)">
+                            <nb-icon icon="trash-2-outline"></nb-icon> 删除
+                        </button>
+                    </div>
+                </nb-card-footer>
+            </nb-card>
+        </div>
+    </div>
+</ng-container>
+
+<div class="col-12 text-center text-hint py-5" *ngIf="dataSources.length === 0">
+    <nb-icon icon="inbox-outline" style="font-size: 3rem;"></nb-icon>
+    <p class="mt-2">暂无数据源配置</p>
+</div>

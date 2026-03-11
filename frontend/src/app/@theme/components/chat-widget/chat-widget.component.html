@@ -1,0 +1,277 @@
+<div class="chat-widget-container no-export" *ngIf="isAuthenticated">
+    <!-- Floating Icon -->
+    <div class="chat-btn-wrapper" cdkDrag [cdkDragFreeDragPosition]="dragPosition" (cdkDragEnded)="onDragEnded($event)">
+        <div class="chat-btn" (click)="toggleChat()"
+            [nbTooltip]="currentMode === 'kn' ? '点击这里进行SQL智能对话' : '点击这里进行通用智能对话'" nbTooltipStatus="control">
+            <img [src]="currentMode === 'kn' ? 'assets/images/kn.png' : 'assets/images/chatgpt.png'"
+                [alt]="currentMode">
+        </div>
+        <!-- Mode Switcher Arrows -->
+        <div class="mode-switcher d-flex position-absolute"
+            style="bottom: -10px; right: 0; background: white; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); height: 20px; align-items: center; border: 1px solid #edf1f7;">
+            <div class="switch-arrow left d-flex align-items-center justify-content-center"
+                (click)="switchMode($event, 'prev')"
+                style="cursor: pointer; width: 22px; height: 100%; border-right: 1px solid #edf1f7;">
+                <nb-icon icon="chevron-left-outline" style="font-size: 0.9rem;"></nb-icon>
+            </div>
+            <div class="switch-arrow right d-flex align-items-center justify-content-center"
+                (click)="switchMode($event, 'next')" style="cursor: pointer; width: 22px; height: 100%;">
+                <nb-icon icon="chevron-right-outline" style="font-size: 0.9rem;"></nb-icon>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gemini-style Container -->
+    <div class="chat-drawer" [class.open]="isOpen">
+        <!-- KN Assistant Mode -->
+        <div class="kn-container" *ngIf="currentMode === 'kn' && isOpen"
+            style="width: 100%; height: 100%; display: flex; flex-direction: column;">
+            <div class="chat-header">
+                <div class="title-container">
+                    <span class="header-title">KN 智能助手</span>
+                </div>
+                <div class="actions">
+                    <button nbButton ghost size="small" status="basic" (click)="closeChat()" class="close-x">
+                        <nb-icon icon="close-outline"></nb-icon>
+                    </button>
+                </div>
+            </div>
+            <div class="iframe-wrapper" style="flex: 1; overflow: hidden;">
+                <iframe src="https://example.com/chatbot/11Y2L58RbrbfffX2"
+                    style="width: 100%; height: 100%; border: none;" allow="microphone">
+                </iframe>
+            </div>
+        </div>
+
+        <!-- ChatGPT Mode -->
+        <ng-container *ngIf="currentMode === 'chatgpt'">
+            <!-- Left Slim Sidebar -->
+            <div class="gemini-sidebar" [class.expanded]="isSidebarExpanded">
+                <div class="sidebar-top">
+                    <button nbButton ghost size="medium" status="basic" (click)="toggleSidebar()" nbTooltip="展开菜单"
+                        nbTooltipPlacement="right">
+                        <nb-icon icon="menu-outline"></nb-icon>
+                    </button>
+                    <div class="divider my-2"></div>
+                    <button nbButton ghost size="medium" status="basic" (click)="newSession()" nbTooltip="开启新会话"
+                        nbTooltipPlacement="right">
+                        <nb-icon icon="edit-2-outline"></nb-icon>
+                    </button>
+                </div>
+
+                <!-- Expanded Sidebar Content -->
+                <div class="expanded-content" *ngIf="isSidebarExpanded">
+                    <div class="section-title">会话窗口</div>
+                    <div class="session-list">
+                        <div class="session-item" [class.active]="currentSessionId === 'default'"
+                            (click)="switchSession('default')">
+                            <nb-icon icon="message-square-outline"></nb-icon>
+                            <span class="session-name">默认对话</span>
+                        </div>
+                    </div>
+
+                    <div class="section-title d-flex justify-content-between align-items-center mt-3">
+                        <span>功能模块</span>
+                        <button nbButton ghost size="tiny" status="primary" (click)="showModuleForm = true">
+                            <nb-icon icon="plus-outline"></nb-icon>
+                        </button>
+                    </div>
+
+                    <div class="module-list">
+                        <div *ngFor="let mod of customModules" class="module-item"
+                            [class.active]="currentSessionId === mod.id.toString()"
+                            (click)="switchSession(mod.id.toString())">
+                            <nb-icon icon="cube-outline"></nb-icon>
+                            <span class="module-name">{{ mod.name }}</span>
+                            <span class="badge badge-pill badge-primary ml-1" *ngIf="mod.is_published"
+                                style="font-size: 0.6rem;">已发布</span>
+                            <span class="badge badge-pill badge-warning ml-1" *ngIf="!mod.is_published"
+                                style="font-size: 0.6rem;">草稿</span>
+                            <div class="item-actions" *ngIf="canEdit(mod)">
+                                <nb-icon icon="edit-2-outline" class="edit-icon"
+                                    (click)="$event.stopPropagation(); editModule(mod)"></nb-icon>
+                                <nb-icon icon="trash-2-outline" class="delete-icon"
+                                    (click)="$event.stopPropagation(); deleteModule(mod.id)"></nb-icon>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Add/Edit Module Form -->
+                    <div class="module-form" *ngIf="showModuleForm">
+                        <div class="form-header mb-2 d-flex justify-content-between align-items-center">
+                            <span class="small font-weight-bold">{{ editingModuleId ? '编辑功能' : '添加功能' }}</span>
+                            <button nbButton size="tiny" ghost (click)="showModuleForm = false; editingModuleId = null">
+                                <nb-icon icon="close-outline"></nb-icon>
+                            </button>
+                        </div>
+                        <input type="text" nbInput fullWidth size="tiny" [(ngModel)]="newModule.name" placeholder="功能名称"
+                            class="mb-1">
+                        <input type="text" nbInput fullWidth size="tiny" [(ngModel)]="newModule.url"
+                            placeholder="Webhook URL" class="mb-1">
+                        <textarea nbInput fullWidth size="tiny" [(ngModel)]="newModule.body"
+                            placeholder="JSON Body (Use ${session} for sessionId)" rows="3"></textarea>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <button nbButton size="tiny" [status]="newModule.is_published ? 'success' : 'basic'"
+                                (click)="newModule.is_published = !newModule.is_published">
+                                {{ newModule.is_published ? '已发布' : '未发布' }}
+                            </button>
+                            <button nbButton size="tiny" status="primary" (click)="addModule()">{{ editingModuleId ?
+                                '保存' :
+                                '添加' }}</button>
+                        </div>
+                    </div>
+
+                    <div class="section-title d-flex justify-content-between align-items-center mt-3">
+                        <span>快捷</span>
+                        <button nbButton ghost size="tiny" status="primary" (click)="showShortcutForm = true">
+                            <nb-icon icon="plus-outline"></nb-icon>
+                        </button>
+                    </div>
+
+                    <div class="module-list">
+                        <div *ngFor="let shortcut of shortcuts" class="module-item"
+                            [class.active]="currentSessionId === shortcut.id.toString()"
+                            (click)="switchSession(shortcut.id.toString())">
+                            <nb-icon icon="flash-outline"></nb-icon>
+                            <span class="module-name">{{ shortcut.name }}</span>
+                            <span class="badge badge-pill badge-primary ml-1" *ngIf="shortcut.is_published"
+                                style="font-size: 0.6rem;">已发布</span>
+                            <span class="badge badge-pill badge-warning ml-1" *ngIf="!shortcut.is_published"
+                                style="font-size: 0.6rem;">草稿</span>
+                            <div class="item-actions" *ngIf="canEdit(shortcut)">
+                                <nb-icon icon="edit-2-outline" class="edit-icon"
+                                    (click)="$event.stopPropagation(); editShortcut(shortcut)"></nb-icon>
+                                <nb-icon icon="trash-2-outline" class="delete-icon"
+                                    (click)="$event.stopPropagation(); deleteShortcut(shortcut.id)"></nb-icon>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Add/Edit Shortcut Form -->
+                    <div class="module-form" *ngIf="showShortcutForm">
+                        <div class="form-header mb-2 d-flex justify-content-between align-items-center">
+                            <span class="small font-weight-bold">{{ editingShortcutId ? '编辑快捷' : '添加快捷' }}</span>
+                            <button nbButton size="tiny" ghost
+                                (click)="showShortcutForm = false; editingShortcutId = null">
+                                <nb-icon icon="close-outline"></nb-icon>
+                            </button>
+                        </div>
+                        <input type="text" nbInput fullWidth size="tiny" [(ngModel)]="newShortcut.name"
+                            placeholder="快捷名称" class="mb-1">
+                        <input type="text" nbInput fullWidth size="tiny" [(ngModel)]="newShortcut.url"
+                            placeholder="Webhook URL" class="mb-1">
+                        <textarea nbInput fullWidth size="tiny" [(ngModel)]="newShortcut.body" placeholder="JSON Body"
+                            rows="3"></textarea>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <button nbButton size="tiny" [status]="newShortcut.is_published ? 'success' : 'basic'"
+                                (click)="newShortcut.is_published = !newShortcut.is_published">
+                                {{ newShortcut.is_published ? '已发布' : '未发布' }}
+                            </button>
+                            <button nbButton size="tiny" status="primary" (click)="addShortcut()">{{ editingShortcutId ?
+                                '保存' :
+                                '添加' }}</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-bottom">
+                    <button *ngIf="isAdmin" nbButton ghost size="medium" status="basic"
+                        (click)="showConfig = !showConfig" nbTooltip="设置 Webhook" nbTooltipPlacement="right">
+                        <nb-icon icon="settings-2-outline"></nb-icon>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Chat Area -->
+            <div class="chat-main">
+                <div class="chat-header">
+                    <div class="title-container">
+                        <span class="header-title">{{ getSessionName() }}</span>
+                    </div>
+
+                    <div class="actions">
+                        <button nbButton ghost size="small" status="basic" (click)="closeChat()" class="close-x">
+                            <nb-icon icon="close-outline"></nb-icon>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Webhook Config Overlay -->
+                <div class="config-overlay" *ngIf="showConfig && isAdmin">
+                    <div class="config-card">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="m-0">Webhook 配置</h6>
+                            <button nbButton ghost size="tiny" (click)="showConfig = false"><nb-icon
+                                    icon="close-outline"></nb-icon></button>
+                        </div>
+                        <label class="label mb-1">Webhook URL</label>
+                        <input type="text" nbInput fullWidth size="small" [(ngModel)]="webhookUrl"
+                            placeholder="http://...">
+                        <div class="mt-3 text-right">
+                            <button nbButton status="primary" size="small" (click)="saveConfig()">保存配置</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-body">
+                    <div *ngIf="messages.length === 0" class="empty-state">
+                        <div class="logo-wrapper">
+                            <img src="assets/images/chatgpt.png" alt="ChatGPT" class="empty-icon">
+                        </div>
+                        <h3 class="greeting">我是您的 AI 助理，有什么可以帮您的吗？</h3>
+                    </div>
+
+                    <div *ngFor="let msg of messages" class="message-row" [class.bot-row]="msg.isBot"
+                        [class.user-row]="!msg.isBot">
+                        <div class="avatar-cell" *ngIf="msg.isBot">
+                            <img src="assets/images/chatgpt.png" alt="AI">
+                        </div>
+                        <div class="message-cell">
+                            <div class="sender-name" *ngIf="msg.isBot">AI Assistant</div>
+                            <div class="bubble-content" [innerHTML]="msg.text.replace('\n', '<br/>')"></div>
+                        </div>
+                    </div>
+
+                    <div *ngIf="loading" class="message-row bot-row">
+                        <div class="avatar-cell">
+                            <img src="assets/images/chatgpt.png" alt="AI">
+                        </div>
+                        <div class="message-cell">
+                            <div class="bubble-content loading-bubble">
+                                <span class="dot-flashing"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mention Dropdown -->
+                <div class="mention-dropdown" *ngIf="showMentionDropdown">
+                    <div class="dropdown-item" *ngFor="let mod of filteredModules; let i = index"
+                        [class.active]="i === selectedIndex" (click)="selectMention(mod)">
+                        <nb-icon icon="flash-outline"></nb-icon>
+                        <span>{{ mod.name }}</span>
+                    </div>
+                </div>
+
+                <div class="chat-input-area">
+                    <div class="input-wrapper">
+                        <textarea nbInput fullWidth placeholder="输入消息，或者试试 @..." [(ngModel)]="newMessage"
+                            (ngModelChange)="onInputChange()" (keydown)="onKeyDown($event)"
+                            (keyup.enter)="sendMessage()" rows="1"></textarea>
+                        <div class="input-actions d-flex align-items-center">
+                            <button *ngIf="loading" nbButton ghost status="danger" (click)="stopGeneration()"
+                                nbTooltip="停止生成">
+                                <nb-icon icon="stop-circle-outline"></nb-icon>
+                            </button>
+                            <button nbButton ghost status="primary" (click)="sendMessage()"
+                                [disabled]="!newMessage.trim() || loading">
+                                <nb-icon icon="paper-plane-outline"></nb-icon>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="footer-hint">AI 可能会产生误差，请核实重要信息。</div>
+                </div>
+            </div>
+        </ng-container>
+    </div>
+</div>
